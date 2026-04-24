@@ -35,5 +35,7 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-
+app.listen(3000,'localhost',()=>{
+  console.log('app is live on local host 3000')
+})
 module.exports = app;
