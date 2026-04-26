@@ -6,6 +6,7 @@ async function uploadFile(req,res){
         logger.info(req.files)
     }
 logger.info(req.file)
+
 res.end()
 }
 
