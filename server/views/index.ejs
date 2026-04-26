@@ -7,5 +7,9 @@
   <body>
     <h1><%= title %></h1>
     <p>Welcome to <%= title %></p>
+    <form action="/file" method="post" enctype="multipart/form-data">
+      <input type="file" name="photos" multiple/>
+      <input type="submit">
+    </form>
   </body>
 </html>
