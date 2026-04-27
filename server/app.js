@@ -1,13 +1,23 @@
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
+var fs = require('fs');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 const usersRouter=require('./routes/usersRoutes')
 const fileRouter=require('./routes/fileRoutes')
+
 var app = express();
+
+
+//upload folder setup
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Uploads directory created');
+}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
