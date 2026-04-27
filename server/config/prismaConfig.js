@@ -1,8 +1,4 @@
 
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.DATABASE_URL
-})
-
-export default prisma
+const { PrismaClient } = require('@prisma/client')
+const prisma = new PrismaClient()
+module.exports = prisma
