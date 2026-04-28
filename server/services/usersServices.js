@@ -2,7 +2,7 @@ const userModel = require('../models/userModel');
 const logger = require('../utils/logger');
 const bcrypt=require('bcrypt')
 const jwt=require('jsonwebtoken')
-
+const dotenv=require('dotenv').config()
 // CREATE
 const createUser = async (name, email, password, role) => {
     try {

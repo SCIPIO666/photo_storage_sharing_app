@@ -4,11 +4,11 @@ var path = require('path');
 var fs = require('fs');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
+const cors = require('cors');
 var indexRouter = require('./routes/index');
 const usersRouter=require('./routes/usersRoutes')
 const fileRouter=require('./routes/fileRoutes')
-
+const dotenv= require('dotenv').config()
 var app = express();
 
 
@@ -22,6 +22,18 @@ if (!fs.existsSync(uploadsDir)) {
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+
+//cross origin requests
+app.use(cors({
+    origin: process.env.FRONT_END_URL,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Authorization']
+}));
+
+// preflight requests
+app.options('*', cors());
 
 app.use(logger('dev'));
 app.use(express.json());

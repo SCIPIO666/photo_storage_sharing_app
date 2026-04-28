@@ -19,31 +19,6 @@ const uploadFile = async (req, res) => {
       });
     }
 
-
-    // Ensure we have a valid user in the database for testing
-    // This is temporary - remove after implementing proper auth
-    try {
-      const userExists = await prisma.user.findUnique({
-        where: { id: userId }
-      });
-      
-      if (!userExists) {
-        logger.warn(`User ${userId} not found, creating test user...`);
-        await prisma.user.create({
-          data: {
-            id: userId,
-            email: `test-${userId}@example.com`,
-            name: 'Test User',
-            password: 'temporary-hash' // In production, use proper hashing
-          }
-        });
-        logger.info(`Created test user: ${userId}`);
-      }
-    } catch (userError) {
-      logger.error(`User check failed: ${userError.message}`);
-    }
-
-
     const uploadResults = [];
     
     for (const file of files) {

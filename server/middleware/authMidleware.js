@@ -7,7 +7,10 @@ const bcrypt = require('bcrypt');
 // Protect middleware - for authenticated routes
 const protect = async (req, res, next) => {
     let token;
-
+      if (req.method === 'OPTIONS') {
+        return next();
+    }
+    
     // Check if token exists in Headers
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {

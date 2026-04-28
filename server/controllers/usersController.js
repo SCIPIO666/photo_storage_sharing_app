@@ -81,7 +81,7 @@ const logInUser= async (req, res,next) => {
     try {
         const {password,email}=req.body
 
-        const{userWithNoPassword,token}=userService.logInUser(email,password)
+        const{userWithNoPassword,token}= await userService.logInUser(email,password)
         logger.info(`succesful login ${email}`)
     return res.status(200).json({
             message: 'Login successful',

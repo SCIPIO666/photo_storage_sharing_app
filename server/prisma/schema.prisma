@@ -41,6 +41,9 @@ model File {
   publicId  String // Cloudinary public_id (needed for deletion)
   filename  String
   size      Int
+  width     Int?
+  height    Int?
+  format    String?
   mimeType  String
   folderId  String
   folder    Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
