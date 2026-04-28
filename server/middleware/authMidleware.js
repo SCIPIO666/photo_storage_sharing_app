@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const prisma = require('../config/prismaConfig');
 
 const protect = async (req, res, next) => {
     let token;
@@ -37,4 +38,46 @@ const restrictTo = (...allowedRoles) => {
     };
 };
 
-module.exports = { protect, restrictTo };
+// // Auth middleware 
+// const authenticate = async (req, res, next) => {
+//   // authentication logic here
+//   // For now, using a test user ID
+//   req.user = { id: 'test-user-id' }; // Replace with actual auth
+//   next();
+// };
+
+
+// to be updated after auth
+const authenticate = async (req, res, next) => {
+  try {
+    // For testing, use a fixed user ID
+    // In production, you would verify JWT tokens here
+    const testUserId = 'test-user-id';
+    
+    // Ensure test user exists
+    let user = await prisma.user.findUnique({
+      where: { id: testUserId }
+    });
+    
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          id: testUserId,
+          email: 'test@example.com',
+          name: 'Test User',
+          password: 'hashed-password-placeholder'
+        }
+      });
+      logger.info(`Created test user: ${user.id}`);
+    }
+    
+    req.user = { id: testUserId };
+    next();
+  } catch (error) {
+    logger.error(`Auth error: ${error.message}`);
+    res.status(401).json({ success: false, error: 'Authentication failed' });
+  }
+};
+
+
+module.exports = { protect, restrictTo,authenticate };
