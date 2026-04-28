@@ -1,5 +1,5 @@
 
-const prisma = require('../config/database');
+const prisma = require('../config/prismaConfig');
 const cloudinary = require('../config/cloudinary');
 const logger = require('../utils/logger');
 

@@ -8,11 +8,15 @@ const validate = require('../validators/fileValidator');
 const logger = require('../utils/logger');
 const fileController = require('../controllers/fileController');
 const FileModel = require('../models/FileModel');
-const {authenticate} =require('../middleware/authMidleware')
+const { protectDev, restrictTo } =require('../middleware/authMidleware')
+
+// All routes require authentication
+fileRouter.use(protectDev);
+
+
 
 //upload file/files
 fileRouter.post('/',
-  authenticate,
   (req, res, next) => {
     upload.array('photos', 5)(req, res, (err) => {
       if (err) {
@@ -31,7 +35,7 @@ fileRouter.post('/',
 );
 
 // Get all files (with pagination and filtering)
-fileRouter.get('/', authenticate, async (req, res) => {
+fileRouter.get('/', async (req, res) => {
   try {
     const { page, limit, folderId, search } = req.query;
     const result = await FileModel.getUserFiles(req.user.id, {
@@ -52,7 +56,7 @@ fileRouter.get('/', authenticate, async (req, res) => {
 });
 
 // Get single file
-fileRouter.get('/:id', authenticate, async (req, res) => {
+fileRouter.get('/:id', async (req, res) => {
   try {
     const file = await FileModel.getFileById(req.params.id, req.user.id);
     res.json({ success: true, file });
@@ -62,7 +66,7 @@ fileRouter.get('/:id', authenticate, async (req, res) => {
 });
 
 // Delete file
-fileRouter.delete('/:id', authenticate, async (req, res) => {
+fileRouter.delete('/:id',  async (req, res) => {
   try {
     const deletedFile = await FileModel.deleteFile(req.params.id, req.user.id);
     res.json({
@@ -76,7 +80,7 @@ fileRouter.delete('/:id', authenticate, async (req, res) => {
 });
 
 // Delete multiple files
-fileRouter.delete('/', authenticate, async (req, res) => {
+fileRouter.delete('/',  async (req, res) => {
   try {
     const { fileIds } = req.body;
     if (!fileIds || !Array.isArray(fileIds)) {
@@ -95,7 +99,7 @@ fileRouter.delete('/', authenticate, async (req, res) => {
 });
 
 // Update file (move to folder or rename)
-fileRouter.patch('/:id', authenticate, async (req, res) => {
+fileRouter.patch('/:id',  async (req, res) => {
   try {
     const { filename, folderId } = req.body;
     const updatedFile = await FileModel.updateFile(req.params.id, req.user.id, {
@@ -114,7 +118,7 @@ fileRouter.patch('/:id', authenticate, async (req, res) => {
 });
 
 // Get file statistics
-fileRouter.get('/stats/overview', authenticate, async (req, res) => {
+fileRouter.get('/stats/overview', async (req, res) => {
   try {
     const stats = await FileModel.getStats(req.user.id);
     res.json({ success: true, stats });

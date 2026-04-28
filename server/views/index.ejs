@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-    <form action="/file" method="post" enctype="multipart/form-data">
-      <input type="file" name="photos" multiple/>
-      <input type="submit">
-    </form>
-  </body>
+<html lang="en">
+<head>
+    <title>Home</title>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a> | 
+        <a href="/users/sign-up">Sign Up</a> | 
+        <a href="/users/log-in">Log In</a> | 
+        <a href="/uploads">Upload Files</a>
+    </nav>
+    <h1>Welcome to the App</h1>
+    <p>Please log in or sign up to continue.</p>
+</body>
 </html>

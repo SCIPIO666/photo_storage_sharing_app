@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Upload Photos</title>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a> | 
+        <a href="/uploads">Upload Files</a>
+    </nav>
+    <h2>Upload Your Photos</h2>
+    <form action="/file" method="post" enctype="multipart/form-data">
+        <input type="file" name="photos" multiple />
+        <input type="submit" value="Upload Now">
+    </form>
+</body>
+</html>

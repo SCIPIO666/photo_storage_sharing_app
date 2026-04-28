@@ -1,9 +1,8 @@
-// controllers/fileController.js
-const { uploadToCloudinary } = require("../services/fileServices");
-const { PrismaClient } = require('@prisma/client');
-const logger = require('../utils/logger');
 
-const prisma = new PrismaClient();
+const { uploadToCloudinary } = require("../services/fileServices");
+const logger = require('../utils/logger');
+const prisma=require('../config/prismaConfig')
+
 
 const uploadFile = async (req, res) => {
   try {
@@ -20,7 +19,7 @@ const uploadFile = async (req, res) => {
       });
     }
 
-    
+
     // Ensure we have a valid user in the database for testing
     // This is temporary - remove after implementing proper auth
     try {

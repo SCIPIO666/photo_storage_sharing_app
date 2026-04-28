@@ -1,0 +1,26 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Log In</title>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a> | 
+        <a href="/users/sign-up">Sign Up</a> | 
+        <a href="/users/log-in">Log In</a>
+    </nav>
+    <h2>Log In</h2>
+    <form action="/users/log-in" method="POST">
+        <div>
+            <label>Email:</label>
+            <input type="email" name="email" required>
+        </div>
+        <div>
+            <label>Password:</label>
+            <input type="password" name="password" required>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html>
