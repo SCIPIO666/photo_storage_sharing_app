@@ -1,6 +1,7 @@
 const logger = require('../utils/logger');
 const db=require('../config/prismaConfig')
-
+const dotenv=require('dotenv')
+dotenv.config()
     //CRUD USER DB ACTIONS
 async function createUser(name, email, password, role) {
     logger.info('about to create user in db')

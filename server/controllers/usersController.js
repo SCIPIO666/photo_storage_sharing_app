@@ -15,7 +15,7 @@ const createUser = async (req, res) => {
 
         //  Remove password from the response object for security
         logger.info(newUser, 'User registered successfully');
-        return res.status(201).json(safeUser);
+        return res.status(201).json(newUser);
 
     } catch (error) {
         logger.error({ err: error.message }, 'Registration logic failed');

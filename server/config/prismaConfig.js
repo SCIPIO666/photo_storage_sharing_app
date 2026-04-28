@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 const { PrismaPg } = require('@prisma/adapter-pg');
 const { PrismaClient } = require('@prisma/client');
-
+const dotenv=require('dotenv').config()
 // 1. Create the pg Pool
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
