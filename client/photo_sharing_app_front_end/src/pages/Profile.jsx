@@ -1,177 +1,78 @@
-// pages/Profile.jsx
-import React, { useState, useEffect } from 'react';
+// src/pages/Profile.jsx
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import LoadingSpinner from '../components/Common/LoadingSpinner';
-import ErrorAlert from '../components/Common/ErrorAlert';
-import './Profile.css';
-
-/**
- * USER PROFILE PAGE
- * 
- * Features:
- * - View profile information
- * - Edit name and email
- * - Change password
- * - Delete account (with confirmation)
- * - Upload profile picture (bonus)
- * - Account statistics
- */
+import { Save, X, Key, AlertTriangle } from 'lucide-react';
 
 const Profile = () => {
-  const { user, login } = useAuth(); // login used to refresh user data after update
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  
-  // Edit mode state
+  const { user, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({
-    name: '',
-    email: ''
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    email: user?.email || ''
   });
-  
-  // Password change state
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({
+  const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
-  
-  // Delete account state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  
-  // Profile picture state
-  const [profilePicture, setProfilePicture] = useState(null);
-  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
 
-  // Initialize edit form with user data
-  useEffect(() => {
-    if (user) {
-      setEditForm({
-        name: user.name || '',
-        email: user.email || ''
-      });
-    }
-  }, [user]);
-
-  /**
-   * HANDLE PROFILE UPDATE
-   */
-  const handleProfileUpdate = async (e) => {
+  const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-    setSuccess(null);
+    setMessage({ type: '', text: '' });
     
     try {
-      const response = await api.patch('/auth/profile', editForm);
-      
-      // Update user data in context
-      await login(user.email, user.password); // Re-fetch user data
-      // Or update context directly
-      
-      setSuccess('Profile updated successfully!');
+      await api.patch('/auth/profile', formData);
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setIsEditing(false);
-      
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to update profile');
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.error || 'Update failed' });
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * HANDLE PASSWORD CHANGE
-   */
-  const handlePasswordChange = async (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault();
     
-    // Validate passwords
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError('New passwords do not match');
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setMessage({ type: 'error', text: 'New passwords do not match' });
       return;
     }
     
-    if (passwordForm.newPassword.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (passwordData.newPassword.length < 6) {
+      setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
       return;
     }
     
     setLoading(true);
-    setError(null);
     
     try {
       await api.patch('/auth/change-password', {
-        currentPassword: passwordForm.currentPassword,
-        newPassword: passwordForm.newPassword
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
       });
       
-      setSuccess('Password changed successfully!');
+      setMessage({ type: 'success', text: 'Password changed successfully!' });
       setShowPasswordModal(false);
-      setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to change password');
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.error || 'Password change failed' });
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * HANDLE PROFILE PICTURE UPLOAD
-   */
-  const handleProfilePictureUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // Validate file
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file');
-      return;
-    }
-    
-    if (file.size > 2 * 1024 * 1024) {
-      setError('Profile picture must be less than 2MB');
-      return;
-    }
-    
-    const formData = new FormData();
-    formData.append('avatar', file);
-    
-    setUploadingPicture(true);
-    setError(null);
-    
-    try {
-      const response = await api.post('/auth/avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
-      setProfilePicture(response.data.url);
-      setSuccess('Profile picture updated!');
-      
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to upload picture');
-    } finally {
-      setUploadingPicture(false);
-    }
-  };
-
-  /**
-   * HANDLE ACCOUNT DELETION
-   * 
-   * DANGER: This is irreversible
-   * Deletes all user data, photos, albums from both DB and Cloudinary
-   */
   const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== 'DELETE MY ACCOUNT') {
-      setError('Please type "DELETE MY ACCOUNT" to confirm');
+    if (deleteConfirm !== 'DELETE MY ACCOUNT') {
+      setMessage({ type: 'error', text: 'Please type "DELETE MY ACCOUNT" to confirm' });
       return;
     }
     
@@ -179,270 +80,207 @@ const Profile = () => {
     
     try {
       await api.delete('/auth/account');
-      
-      // Log out user
-      localStorage.clear();
+      logout();
       window.location.href = '/login';
-      
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to delete account');
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.error || 'Account deletion failed' });
       setLoading(false);
     }
   };
 
-  if (!user) return <LoadingSpinner />;
-
   return (
-    <div className="profile-page">
-      {/* Success/Error Messages */}
-      {success && <div className="success-alert">{success}</div>}
-      {error && <ErrorAlert message={error} onClose={() => setError(null)} />}
+    <div className="max-w-3xl mx-auto">
+      {message.text && (
+        <div className={`mb-4 p-4 rounded-lg ${
+          message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          {message.text}
+        </div>
+      )}
 
-      <div className="profile-container">
-        {/* Profile Header */}
-        <div className="profile-header">
-          <div className="avatar-section">
-            <div className="avatar-wrapper">
-              {profilePicture || user.avatar ? (
-                <img
-                  src={profilePicture || user.avatar}
-                  alt={user.name}
-                  className="avatar-large"
-                />
-              ) : (
-                <div className="avatar-placeholder">
-                  {user.name?.charAt(0).toUpperCase()}
-                </div>
-              )}
-              
-              <label className="avatar-upload-btn">
-                📷
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleProfilePictureUpload}
-                  disabled={uploadingPicture}
-                  hidden
-                />
-              </label>
-            </div>
-            
-            <div className="profile-title">
-              <h1>{user.name}</h1>
-              <p className="user-email">{user.email}</p>
-              <p className="member-since">
-                Member since {new Date(user.createdAt).toLocaleDateString()}
-              </p>
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700">
+          <h2 className="text-xl font-semibold text-white">Profile Settings</h2>
+        </div>
+        
+        <div className="p-6">
+          <div className="flex justify-center mb-6">
+            <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-3xl font-bold text-white">
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </span>
             </div>
           </div>
-        </div>
-
-        {/* Profile Content */}
-        <div className="profile-content">
-          {/* Account Information Card */}
-          <div className="profile-card">
-            <div className="card-header">
-              <h2>Account Information</h2>
-              {!isEditing && (
+          
+          {!isEditing ? (
+            <div className="space-y-4">
+              <div className="border-b pb-3">
+                <label className="text-sm text-gray-500">Full Name</label>
+                <p className="text-lg font-medium">{user?.name}</p>
+              </div>
+              
+              <div className="border-b pb-3">
+                <label className="text-sm text-gray-500">Email Address</label>
+                <p className="text-lg font-medium">{user?.email}</p>
+              </div>
+              
+              <div className="border-b pb-3">
+                <label className="text-sm text-gray-500">Member Since</label>
+                <p className="text-lg font-medium">
+                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                </p>
+              </div>
+              
+              <div className="pt-4 flex gap-3">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="btn-edit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   Edit Profile
                 </button>
-              )}
-            </div>
-            
-            {isEditing ? (
-              <form onSubmit={handleProfileUpdate} className="profile-form">
-                <div className="form-group">
-                  <label>Full Name</label>
-                  <input
-                    type="text"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Email Address</label>
-                  <input
-                    type="email"
-                    value={editForm.email}
-                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    required
-                  />
-                </div>
-                
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditing(false)}
-                    className="btn-secondary"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn-primary"
-                  >
-                    {loading ? 'Saving...' : 'Save Changes'}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="profile-info">
-                <div className="info-row">
-                  <span className="info-label">Name:</span>
-                  <span className="info-value">{user.name}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Email:</span>
-                  <span className="info-value">{user.email}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Account ID:</span>
-                  <span className="info-value mono">{user.id}</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Security Card */}
-          <div className="profile-card">
-            <h2>Security</h2>
-            
-            <div className="security-options">
-              <div className="security-option">
-                <div>
-                  <h3>Change Password</h3>
-                  <p className="option-description">
-                    Update your password to keep your account secure
-                  </p>
-                </div>
                 <button
                   onClick={() => setShowPasswordModal(true)}
-                  className="btn-secondary"
+                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center gap-2"
                 >
+                  <Key className="w-4 h-4" />
                   Change Password
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* Account Statistics Card */}
-          <div className="profile-card">
-            <h2>Account Statistics</h2>
-            
-            <div className="stats-grid">
-              <div className="stat-item">
-                <div className="stat-number">{user._count?.albums || 0}</div>
-                <div className="stat-label">Albums Created</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-number">{user._count?.photos || 0}</div>
-                <div className="stat-label">Photos Uploaded</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-number">
-                  {((user._count?.photos || 0) * 2.5).toFixed(1)} MB
-                </div>
-                <div className="stat-label">Storage Used</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Danger Zone Card */}
-          <div className="profile-card danger-zone">
-            <h2>Danger Zone</h2>
-            
-            <div className="danger-option">
+          ) : (
+            <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div>
-                <h3>Delete Account</h3>
-                <p className="option-description">
-                  Permanently delete your account and all associated data.
-                  This action cannot be undone.
-                </p>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                />
               </div>
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="btn-danger"
-              >
-                Delete Account
-              </button>
-            </div>
-          </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="mt-8 bg-red-50 border border-red-200 rounded-lg overflow-hidden">
+        <div className="px-6 py-4 bg-red-100">
+          <h3 className="text-lg font-semibold text-red-800 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            Danger Zone
+          </h3>
+        </div>
+        <div className="p-6">
+          <p className="text-gray-700 mb-4">
+            Once you delete your account, there is no going back. All your photos, albums, and data will be permanently deleted.
+          </p>
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Delete Account
+          </button>
         </div>
       </div>
 
       {/* Change Password Modal */}
       {showPasswordModal && (
-        <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Change Password</h2>
-              <button className="modal-close" onClick={() => setShowPasswordModal(false)}>
-                ×
-              </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg max-w-md w-full mx-4">
+            <div className="px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold">Change Password</h3>
             </div>
             
-            <form onSubmit={handlePasswordChange}>
-              <div className="form-group">
-                <label>Current Password</label>
+            <form onSubmit={handleChangePassword} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Current Password
+                </label>
                 <input
                   type="password"
-                  value={passwordForm.currentPassword}
-                  onChange={(e) => setPasswordForm({
-                    ...passwordForm,
-                    currentPassword: e.target.value
-                  })}
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   required
                 />
               </div>
               
-              <div className="form-group">
-                <label>New Password</label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  New Password
+                </label>
                 <input
                   type="password"
-                  value={passwordForm.newPassword}
-                  onChange={(e) => setPasswordForm({
-                    ...passwordForm,
-                    newPassword: e.target.value
-                  })}
-                  required
-                />
-                <small>Minimum 6 characters</small>
-              </div>
-              
-              <div className="form-group">
-                <label>Confirm New Password</label>
-                <input
-                  type="password"
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) => setPasswordForm({
-                    ...passwordForm,
-                    confirmPassword: e.target.value
-                  })}
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   required
                 />
               </div>
               
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  onClick={() => setShowPasswordModal(false)}
-                  className="btn-secondary"
-                >
-                  Cancel
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn-primary"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   {loading ? 'Changing...' : 'Change Password'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                >
+                  Cancel
                 </button>
               </div>
             </form>
@@ -452,53 +290,45 @@ const Profile = () => {
 
       {/* Delete Account Modal */}
       {showDeleteModal && (
-        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="modal danger-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>⚠️ Delete Account</h2>
-              <button className="modal-close" onClick={() => setShowDeleteModal(false)}>
-                ×
-              </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg max-w-md w-full mx-4">
+            <div className="px-6 py-4 border-b bg-red-50">
+              <h3 className="text-lg font-semibold text-red-800">Delete Account</h3>
             </div>
             
-            <div className="modal-body">
-              <p className="warning-text">
-                This action is <strong>permanent and cannot be undone</strong>.
+            <div className="p-6 space-y-4">
+              <p className="text-gray-700">
+                This action <strong>cannot be undone</strong>. This will permanently delete your account and all associated data.
               </p>
-              <p>Deleting your account will:</p>
-              <ul>
-                <li>Delete all your photos from Cloudinary</li>
-                <li>Remove all your albums and data</li>
-                <li>Permanently erase your account information</li>
-              </ul>
               
-              <div className="confirm-input">
-                <label>
+              <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                <p className="text-sm text-yellow-800">
                   Type <strong>DELETE MY ACCOUNT</strong> to confirm:
-                </label>
+                </p>
                 <input
                   type="text"
-                  value={deleteConfirmText}
-                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  value={deleteConfirm}
+                  onChange={(e) => setDeleteConfirm(e.target.value)}
+                  className="w-full mt-2 px-3 py-2 border border-gray-300 rounded"
                   placeholder="DELETE MY ACCOUNT"
                 />
               </div>
-            </div>
-            
-            <div className="modal-actions">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                disabled={loading || deleteConfirmText !== 'DELETE MY ACCOUNT'}
-                className="btn-danger"
-              >
-                {loading ? 'Deleting...' : 'Permanently Delete Account'}
-              </button>
+              
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  {loading ? 'Deleting...' : 'Permanently Delete Account'}
+                </button>
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
