@@ -13,35 +13,34 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
           <Navbar />
           <div className="container mx-auto px-4 py-8">
             <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<h1 className="text-3xl font-bold text-center mt-20">Find Your Memories</h1>} />
+              <Route path="/" element={
+                <div className="text-center py-20">
+                  <div className="text-6xl mb-4">📸</div>
+                  <h1 className="text-5xl font-bold text-gray-800 mb-4">Find Your Memories</h1>
+                  <p className="text-xl text-gray-600">Store, organize, and share your precious moments</p>
+                </div>
+              } />
               <Route path="/signup" element={<Signup />} />
               <Route path="/login" element={<Login />} />
-              
-              {/* Protected Routes (require authentication) */}
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
               } />
-              
               <Route path="/uploads" element={
                 <ProtectedRoute>
                   <Uploads />
                 </ProtectedRoute>
               } />
-              
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />
                 </ProtectedRoute>
               } />
-              
-              {/* Catch all - redirect to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
