@@ -47,4 +47,5 @@ const uploadToCloudinary = (file) => {
   });
 };
 
+
 module.exports = { uploadToCloudinary };

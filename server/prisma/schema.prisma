@@ -1,7 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// prisma/schema.prisma
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
 datasource db {
   provider = "postgresql"
 }
@@ -11,21 +9,24 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  role      Role     @default(USER)
-  folders   Folder[]
-  files     File[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String?
+  password         String
+  role             Role      @default(USER)
+  resetToken       String?   @unique // For password reset
+  resetTokenExpiry DateTime? // Token expiration
+  folders          Folder[]
+  files            File[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 model Folder {
   id          String   @id @default(cuid())
   name        String
   description String?
+  isDefault   Boolean  @default(false) //  default "Main Gallery" folder
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   files       File[]
@@ -33,6 +34,7 @@ model Folder {
   updatedAt   DateTime @updatedAt
 
   @@unique([name, userId])
+  @@index([userId])
 }
 
 model File {
@@ -41,9 +43,9 @@ model File {
   publicId  String // Cloudinary public_id (needed for deletion)
   filename  String
   size      Int
-  width     Int?
-  height    Int?
-  format    String?
+  width     Int? // Optional: store image dimensions
+  height    Int? // Optional: store image dimensions
+  format    String? // Optional: image format (jpg, png, etc.)
   mimeType  String
   folderId  String
   folder    Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
@@ -53,6 +55,7 @@ model File {
 
   @@index([userId])
   @@index([folderId])
+  @@index([createdAt]) // For sorting by date
 }
 
 enum Role {

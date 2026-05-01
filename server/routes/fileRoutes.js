@@ -7,7 +7,7 @@ const { fileUploadSchema } = require('../schemas/fileSchema');
 const validate = require('../validators/fileValidator');
 const logger = require('../utils/logger');
 const fileController = require('../controllers/fileController');
-const FileModel = require('../models/FileModel');
+const fileModel = require('../models/fileModel');
 const { protectDev, restrictTo } =require('../middleware/authMidleware')
 
 // All routes require authentication
@@ -68,7 +68,7 @@ fileRouter.get('/:id', async (req, res) => {
 // Delete file
 fileRouter.delete('/:id',  async (req, res) => {
   try {
-    const deletedFile = await FileModel.deleteFile(req.params.id, req.user.id);
+    const deletedFile = await fileModel.deleteFile(req.params.id, req.user.id);
     res.json({
       success: true,
       message: 'File deleted successfully',
@@ -87,7 +87,7 @@ fileRouter.delete('/',  async (req, res) => {
       return res.status(400).json({ success: false, error: 'fileIds array required' });
     }
     
-    const result = await FileModel.deleteManyFiles(fileIds, req.user.id);
+    const result = await fileModel.deleteManyFiles(fileIds, req.user.id);
     res.json({
       success: true,
       message: `${result.deletedCount} file(s) deleted successfully`,
@@ -102,7 +102,7 @@ fileRouter.delete('/',  async (req, res) => {
 fileRouter.patch('/:id',  async (req, res) => {
   try {
     const { filename, folderId } = req.body;
-    const updatedFile = await FileModel.updateFile(req.params.id, req.user.id, {
+    const updatedFile = await fileModel.updateFile(req.params.id, req.user.id, {
       filename,
       folderId
     });
@@ -120,7 +120,7 @@ fileRouter.patch('/:id',  async (req, res) => {
 // Get file statistics
 fileRouter.get('/stats/overview', async (req, res) => {
   try {
-    const stats = await FileModel.getStats(req.user.id);
+    const stats = await fileModel.getStats(req.user.id);
     res.json({ success: true, stats });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

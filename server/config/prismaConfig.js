@@ -1,15 +1,28 @@
-const { Pool } = require('pg');
-const { PrismaPg } = require('@prisma/adapter-pg');
+// config/database.js
 const { PrismaClient } = require('@prisma/client');
-const dotenv=require('dotenv').config()
-// 1. Create the pg Pool
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const dotenv = require('dotenv');
 
-// 2. Create the adapter
-const adapter = new PrismaPg(pool);
+dotenv.config();
 
-// 3. Pass the adapter to Prisma
-const prisma = new PrismaClient({ adapter });
+// Create a single PrismaClient instance for the app
+const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+});
 
-// Only export at the bottom after prisma is defined
+// Test connection
+async function testConnection() {
+  try {
+    await prisma.$connect();
+    console.log('✅ Database connected successfully');
+  } catch (error) {
+    console.error('❌ Database connection failed:', error);
+    process.exit(1);
+  }
+}
+
+// Only run test in development
+if (process.env.NODE_ENV !== 'production') {
+  testConnection();
+}
+
 module.exports = prisma;
