@@ -1,48 +1,98 @@
 
 const prisma = require('../config/prismaConfig');
-const cloudinary = require('../config/cloudinary');
+const cloudinaryModel=require('./cloudinaryUploadModel')
 const logger = require('../utils/logger');
 
-class FileModel {
-  static async getUserFiles(userId, options = {}) {
-    const { page = 1, limit = 20, folderId, search } = options;
-    const skip = (page - 1) * limit;
-    
-    const where = { userId };
-    if (folderId) where.folderId = folderId;
-    if (folderId === 'null') where.folderId = null;
-    if (search) {
-      where.filename = { contains: search, mode: 'insensitive' };
-    }
-    
+
+
+   async function createFile(filePath,userId,folderId){
+     try {
+              const result =await cloudinaryModel.uploadMediaFile(filePath,userId)
+
+              const mediaFile= await prisma.file.create({
+                  data: {
+                    fileName: result.original_filename,
+                    url: result.secure_url,
+                    publicId: result.public_id,
+                    type: "OTHER",
+                    userId: userId,
+                    folderId: folderId || null,
+                  }
+              })
+
+              return mediaFile
+
+      } catch (error) {
+        logger.error(`error: ${error.message}`)
+        throw error
+      }
+  }
+   async function createUpdateAvatar(filePath,userId){
+
+      try {
+              const result =await cloudinaryModel.uploadUserAvatar(filePath,userId)
+              const avatarFile= await prisma.file.upsert({
+                where: {publicId: result.public_id},
+                update: {
+                  url: result.secure_url,
+                  fileName: result.original_filename,
+                  updatedAt: new Date(),
+                },
+                create: {
+                    filename: result.original_filename,
+                    url: result.secure_url,
+                    publicId: result.public_id,
+                    type: "AVATAR",
+                    userId: userId
+                }
+              })
+
+              //link avatar to user
+              await prisma.user.update({
+                where: {id: userId},
+                data: {avatarId: avatarFile.id}
+              })
+
+              return avatarFile
+
+      } catch (error) {
+        logger.error(`error: ${error.message}`)
+        throw error
+      }
+  }
+
+  async function updateFile(fileId, userId, updateData) {
     try {
-      const [files, total] = await Promise.all([
-        prisma.file.findMany({
-          where,
-          skip,
-          take: limit,
-          orderBy: { createdAt: 'desc' },
-          include: { folder: true }
-        }),
-        prisma.file.count({ where })
-      ]);
+      await getFileById(fileId, userId);
       
-      return {
-        files,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit)
-        }
-      };
+      const updatedFile = await prisma.file.update({
+        where: { id: fileId },
+        data: {
+          filename: updateData.filename,
+          folderId: updateData.folderId
+        },
+        include: { folder: true }
+      });
+      
+      return updatedFile;
     } catch (error) {
-      logger.error(`Error in getUserFiles: ${error.message}`);
+      logger.error(`Error in updateFile: ${error.message}`);
       throw error;
     }
   }
+   async function getUserSingleFolderFiles(folderId) {
+    try {
+      const files= await prisma.file.findMany({
+        where:{folderId: folderId}
+      })
+      return files
+    } catch (error) {
+      logger.error(`error: ${error.message}`)
+      throw error
+    }
+  }
   
-  static async getFileById(fileId, userId) {
+   async function getFileById(fileId, userId) {
     try {
       const file = await prisma.file.findFirst({
         where: { id: fileId, userId },
@@ -57,10 +107,9 @@ class FileModel {
     }
   }
   
-  static async deleteFile(fileId, userId) {
+   async function deleteFile(fileId, userId) {
     try {
-      const file = await this.getFileById(fileId, userId);
-      
+      const file = await this.getFileById(fileId, userId)    
       // Delete from Cloudinary
       await cloudinary.uploader.destroy(file.publicId);
       logger.info(`Deleted from Cloudinary: ${file.publicId}`);
@@ -77,7 +126,7 @@ class FileModel {
     }
   }
   
-  static async deleteManyFiles(fileIds, userId) {
+   async function deleteManyFiles(fileIds, userId) {
     try {
       const files = await prisma.file.findMany({
         where: { id: { in: fileIds }, userId }
@@ -107,27 +156,7 @@ class FileModel {
     }
   }
   
-  static async updateFile(fileId, userId, updateData) {
-    try {
-      await this.getFileById(fileId, userId);
-      
-      const updatedFile = await prisma.file.update({
-        where: { id: fileId },
-        data: {
-          filename: updateData.filename,
-          folderId: updateData.folderId
-        },
-        include: { folder: true }
-      });
-      
-      return updatedFile;
-    } catch (error) {
-      logger.error(`Error in updateFile: ${error.message}`);
-      throw error;
-    }
-  }
-  
-  static async getStats(userId) {
+   async function getStats(userId) {
     try {
       const stats = await prisma.file.aggregate({
         where: { userId },
@@ -154,6 +183,17 @@ class FileModel {
       throw error;
     }
   }
-}
 
-module.exports = FileModel;
+
+
+
+module.exports = {
+  createFile,
+  createUpdateAvatar,
+  updateFile,
+  getUserSingleFolderFiles,
+  getFileById,
+  deleteFile,
+  deleteManyFiles,
+  getStats
+}

@@ -1,28 +1,43 @@
 // config/database.js
+const { Pool } = require('pg');
+const { PrismaPg } = require('@prisma/adapter-pg');
 const { PrismaClient } = require('@prisma/client');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Create a single PrismaClient instance for the app
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+// Create the pg Pool with configs
+const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // How long a client is allowed to remain idle
+  connectionTimeoutMillis: 2000, // How long to wait for connection
+});
+
+//  Create the adapter
+const adapter = new PrismaPg(pool);
+
+//Pass the adapter to Prisma
+const prisma = new PrismaClient({ 
+  adapter,
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
 });
 
 // Test connection
-async function testConnection() {
-  try {
-    await prisma.$connect();
-    console.log('✅ Database connected successfully');
-  } catch (error) {
-    console.error('❌ Database connection failed:', error);
-    process.exit(1);
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('❌ Error connecting to database:', err.stack);
+  } else {
+    console.log('✅ Database connected successfully via adapter');
+    release();
   }
-}
+});
 
-// Only run test in development
-if (process.env.NODE_ENV !== 'production') {
-  testConnection();
-}
+// Handle graceful shutdown
+process.on('beforeExit', async () => {
+  await prisma.$disconnect();
+  await pool.end();
+});
 
 module.exports = prisma;

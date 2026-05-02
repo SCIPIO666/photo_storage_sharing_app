@@ -35,7 +35,7 @@ async function removeUser(email){
         throw error; 
     }   
 }
-async function  updateUser(email,updatedData){
+async function  updateUser(email,updatedData){ 
     try {
         const updatedUser = await db.user.update({
             where: {email : email},
@@ -48,10 +48,17 @@ async function  updateUser(email,updatedData){
         throw error; 
     }
 }
-async function  getOneUser(email){
+async function  getOneUser(email){//less expensive lookup 
     try {
         const user = await db.user.findUnique({
-            where: {email: email}
+            where: {email: email},
+            select:{
+                name: true,
+                email: true,
+                password: true,
+                role: true
+                
+            }
         });
 
         return user; 
@@ -59,6 +66,20 @@ async function  getOneUser(email){
         logger.error({ err: error.message }, 'failed to retrieve user from db');
         throw error; 
     }    
+}
+async function getUserWithAvatar(){
+try {
+    const userWithAvatar= await db.findUnique({
+        where: {id: userId},
+        include: {
+            avatar: true,
+            files: true,
+            folders: true
+        }
+    })
+} catch (error) {
+    
+}
 }
 async function  getAllUsers(){
     try {
@@ -70,11 +91,31 @@ async function  getAllUsers(){
         throw error; 
     }
 }
-
+async function getUserData(userId){
+try {
+    const userData=await db.user.findUnique({
+        where:{userId: userid},
+        include:{
+            files: true,
+            folders: {
+                include: {
+                    children: true,
+                    files: true
+                }
+            }
+        }
+    })
+    return userData
+} catch (error) {
+    logger.error(`error: ${error.message}`)
+    throw error
+}
+}
 module.exports={
     createUser,
     removeUser,
     updateUser,
     getOneUser,
-    getAllUsers
+    getAllUsers,
+    getUserData
 }

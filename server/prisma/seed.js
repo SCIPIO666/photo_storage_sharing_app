@@ -2,12 +2,13 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
-
+const prisma=require('../config/prismaConfig')
 dotenv.config();
 
-// Simple Prisma Client initialization for seeding
-const prisma = new PrismaClient();
 
+prisma.User.deleteMany({})
+prisma.Folder.deleteMany({})
+prisma.File.deleteMany({})
 async function main() {
   console.log('🌱 Starting database seeding...');
 
