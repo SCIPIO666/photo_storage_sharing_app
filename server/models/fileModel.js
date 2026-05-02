@@ -61,15 +61,15 @@ const logger = require('../utils/logger');
       }
   }
 
-  async function updateFile(fileId, userId, updateData) {
+  async function updateFile(fileId, userId, updateData={}) {
     try {
-      await getFileById(fileId, userId);
+     const existingFile= await getFileById(fileId, userId);
       
       const updatedFile = await prisma.file.update({
-        where: { id: fileId },
+        where: { id: fileId ,userId},
         data: {
-          filename: updateData.filename,
-          folderId: updateData.folderId
+          ...updateData,
+          updatedAt: new Date()
         },
         include: { folder: true }
       });
@@ -156,7 +156,7 @@ const logger = require('../utils/logger');
     }
   }
   
-   async function getStats(userId) {
+   async function getFileStats(userId) {
     try {
       const stats = await prisma.file.aggregate({
         where: { userId },
@@ -195,5 +195,5 @@ module.exports = {
   getFileById,
   deleteFile,
   deleteManyFiles,
-  getStats
+  getFileStats
 }
