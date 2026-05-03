@@ -43,7 +43,10 @@ async function deletManyFolders(){
     
   } 
 }
-async function createUpdateAvartarFolder(){
+async function createAvartarFolder(){
+
+}
+async function UpdateAvartarFolder(){
 
 }
 async function getAvatarFolder(){
@@ -71,7 +74,8 @@ getUserFolders,
 deleteEmptyFolder,
 deletFolderRecursively,
 deletManyFolders,
-createUpdateAvartarFolder,
+createAvartarFolder,
+UpdateAvartarFolder,
 getAvatarFolder,
 deleteAvatarFolder
 };

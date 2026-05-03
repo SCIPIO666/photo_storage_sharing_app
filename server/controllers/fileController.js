@@ -90,40 +90,63 @@ const uploadFile = async (req, res) => {
     });
   }
 };
-
-async function createFile(){
+async function createFolder(){
   try {
     
   } catch (error) {
     
   }
 }
-async function updateFile(){
+async function updateFolder(){
   try {
     
   } catch (error) {
     
   }  
-}
-async function createupdateAvatar(){
-
 }
 
-async function getFolderFiles(){
+async function getUserFolders(){
   try {
     
   } catch (error) {
     
   }  
 }
-async function getAvatar(){
+async function deleteEmptyFolder(){
+   try {
+    
+  } catch (error) {
+    
+  } 
+}
+async function deletFolderRecursively(){
+   try {
+    
+  } catch (error) {
+    
+  } 
+}
+async function deletManyFolders(){
+   try {
+    
+  } catch (error) {
+    
+  } 
+}
+async function createAvartarFolder(){
+
+}
+async function UpdateAvartarFolder(){
+
+}
+async function getAvatarFolder(){
   try {
     
   } catch (error) {
     
   }  
 }
-async function deleteFile(){
+async function deleteAvatarFolder(){
    try {
     
   } catch (error) {
@@ -132,12 +155,17 @@ async function deleteFile(){
 }
 
 
+
+
 module.exports = {
-  uploadFile,
-  createFile,
-  updateFile,
-createupdateAvatar,
-getFolderFiles,
-getAvatar,
-deleteFile
+createFolder,
+updateFolder,
+getUserFolders,
+deleteEmptyFolder,
+deletFolderRecursively,
+deletManyFolders,
+createAvartarFolder,
+UpdateAvartarFolder,
+getAvatarFolder,
+deleteAvatarFolder
 };

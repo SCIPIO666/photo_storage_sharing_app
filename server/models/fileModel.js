@@ -112,8 +112,7 @@ const logger = require('../utils/logger');
       const file = await this.getFileById(fileId, userId)    
       // Delete from Cloudinary
       await cloudinary.uploader.destroy(file.publicId);
-      logger.info(`Deleted from Cloudinary: ${file.publicId}`);
-      
+
       // Delete from database
       const deletedFile = await prisma.file.delete({
         where: { id: fileId }

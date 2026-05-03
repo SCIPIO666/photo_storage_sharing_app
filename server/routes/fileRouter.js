@@ -1,14 +1,12 @@
 const {Router}=require('express')
 const fileRouter=Router()
+const fileController=require('../controllers/fileController')
 
-fileRouter.post('/avatar')
-fileRouter.post('/')
-fileRouter.get('/:folderId')
-fileRouter.get('/avatar')
-fileRouter.put('/:folderId')
-fileRouter.delete('/empty')
-fileRouter.delete('/recursive/:folderId')
-fileRouter.delete('/many')
-
+fileRouter.post('/',fileController.createFile)
+fileRouter.post('/avatar',fileController.createupdateAvatar)
+fileRouter.put('/:fileId',fileController.updateFile)
+fileRouter.get('/:folderId',fileController.getFolderFiles)
+fileRouter.get('/avatar',fileController.getAvatar)
+fileRouter.delete('/:fileId',fileController.deleteFile)
 
 module.exports=fileRouter
