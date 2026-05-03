@@ -11,16 +11,15 @@ export const fileService = {
   },
   
   getFolderFiles: async (folderId) => {
-    // Matches your backend route GET /file/:folderId
+    // Matches  backend route GET /file/:folderId backend
     const response = await api.get(`/file/${folderId}`);
     return response.data;
   },
 
   deleteFiles: async (fileIds) => {
-    // Matches your bulk delete logic
+    // Matches  bulk delete logic bacckend
     const response = await api.delete('/file', { data: { fileIds } });
     return response.data;
   }
 };
-
 
