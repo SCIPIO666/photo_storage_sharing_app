@@ -1,7 +1,6 @@
 
-const { uploadToCloudinary } = require("../services/fileServices");
+const fileSerrvice=require('../services/fileServices')
 const logger = require('../utils/logger');
-const prisma=require('../config/prismaConfig')
 
 
 const uploadFile = async (req, res) => {

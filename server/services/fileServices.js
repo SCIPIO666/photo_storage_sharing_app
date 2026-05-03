@@ -1,5 +1,4 @@
-const cloudinary = require("../config/cloudinary");
-const stream = require('stream');
+const fileModel=require('../models/fileModel')
 
 async function createFile(){
   try {

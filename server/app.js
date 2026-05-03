@@ -6,9 +6,9 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const cors = require('cors');
 var indexRouter = require('./routes/index');
-const usersRouter=require('./routes/usersRoutes')
-const fileRouter=require('./routes/fileRoutes')
-const folderRouter=require('./routes/folderRoutes')
+const usersRouter=require('./routes/usersRouter')
+const fileRouter=require('./routes/fileRouter')
+const folderRouter=require('./routes/folderRouter')
 const dotenv= require('dotenv').config()
 var app = express();
 
