@@ -212,7 +212,24 @@ async function collectFolderIds(folderId){
       throw error;
     }
   }
+    // createFolder,  userId,name,parentId 
+    // getUserFolders,  userId, rootOnly=false)
+    // getFolderById,   folderId, userId
+    // deleteEmptyFolder,  folderId, userId
+    // deleteFolderRecursively,  folderIds
+    // deleteManyFolders,  folderIds, userId
+    // updateFolder,  folderId, updatedData={}
+    // getFolderStats,  userId
 
 
 
-module.exports = FolderModel;
+module.exports = {
+    createFolder,
+    getUserFolders,
+    getFolderById,
+    deleteEmptyFolder,
+    deleteFolderRecursively,
+    deleteManyFolders,
+    updateFolder,
+    getFolderStats
+};

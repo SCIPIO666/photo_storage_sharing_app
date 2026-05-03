@@ -1,5 +1,13 @@
 const fileModel=require('../models/fileModel')
 
+  // createFile,- filepath,userid,folderid
+  // createUpdateAvatar, filepath userid
+  // updateFile,fileid userd ipdatedData{}
+  // getUserSingleFolderFiles,folderid
+  // getFileById,fileid userid
+  // deleteFile,fileid userid
+  // deleteManyFiles,fileids userid
+  // getFileStats userid
 async function createFile(){
   try {
     

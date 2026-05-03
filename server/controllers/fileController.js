@@ -94,7 +94,7 @@ async function createFolder(){
   try {
     
   } catch (error) {
-    
+    next(error);
   }
 }
 async function updateFolder(){

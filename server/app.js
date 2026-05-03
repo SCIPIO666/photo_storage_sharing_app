@@ -4,6 +4,7 @@ var path = require('path');
 var fs = require('fs');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const internalLogger=require('./utils/logger')
 const cors = require('cors');
 var indexRouter = require('./routes/index');
 const usersRouter=require('./routes/usersRouter')
@@ -60,9 +61,19 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.status()('error');
 });
-app.listen(3000,'localhost',()=>{
-  console.log('app is live on local host 3000')
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  internalLogger.error(`[Error]: ${err.message}`); // Internal logging
+
+  res.status(statusCode).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+    stack: process.env.NODE_ENV === 'development' ? err.stack : {}
+  });
+});
+app.listen(process.env.PORT,'localhost',()=>{
+  internalLogger.info(`app is live in  ${process.env.NODE_ENV}`)
 })
 module.exports = app;

@@ -1,10 +1,19 @@
 const folderModel=require('../models/folderModel')
 
+    // createFolder,  userId,name,parentId 
+    // getUserFolders,  userId, rootOnly=false)
+    // getFolderById,   folderId, userId
+    // deleteEmptyFolder,  folderId, userId
+    // deleteFolderRecursively,  folderIds
+    // deleteManyFolders,  folderIds, userId
+    // updateFolder,  folderId, updatedData={}
+    // getFolderStats,  userId
+
 async function createFolder(){
   try {
     
   } catch (error) {
-    
+    throw error
   }
 }
 async function updateFolder(){
