@@ -92,26 +92,53 @@ const uploadFile = async (req, res) => {
   }
 };
 
-async function getFiles(req, res){
-    try {
-        
-    } catch (error) {
-        
-    }
+async function createFile(){
+  try {
+    
+  } catch (error) {
+    
+  }
 }
-async function deleteFile(req, res){
-    try {
-        
-    } catch (error) {
-        
-    }
+async function updateFile(){
+  try {
+    
+  } catch (error) {
+    
+  }  
 }
-async function updateFileDetails(req, res){
-    try {
-        
-    } catch (error) {
-        
-    }
+async function createupdateAvatar(){
+
 }
 
-module.exports = { uploadFile };
+async function getFolderFiles(){
+  try {
+    
+  } catch (error) {
+    
+  }  
+}
+async function getAvatar(){
+  try {
+    
+  } catch (error) {
+    
+  }  
+}
+async function deleteFile(){
+   try {
+    
+  } catch (error) {
+    
+  } 
+}
+
+
+module.exports = {
+  uploadFile,
+  createFile,
+  updateFile,
+createupdateAvatar,
+getFolderFiles,
+getAvatar,
+deleteFile
+};

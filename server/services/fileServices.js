@@ -15,11 +15,18 @@ async function updateFile(){
     
   }  
 }
-async function updateAvatar(){
+async function createupdateAvatar(){
 
 }
 
 async function getFolderFiles(){
+  try {
+    
+  } catch (error) {
+    
+  }  
+}
+async function getAvatar(){
   try {
     
   } catch (error) {
@@ -35,4 +42,11 @@ async function deleteFile(){
 }
 
 
-module.exports = {};
+module.exports = {
+  createFile,
+  updateFile,
+createupdateAvatar,
+getFolderFiles,
+getAvatar,
+deleteFile
+};
