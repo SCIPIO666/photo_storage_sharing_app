@@ -1,17 +1,26 @@
-const {Router}=require('express')
-const folderRouter=Router()
-const folderController=require('../controllers/folderController')
-const fileRouter = require('./exfile')
+const { Router } = require('express');
+const folderRouter = Router();
+const folderController = require('../controllers/folderController');
 
-folderRouter.post('/',folderController.createFolder)
-folderRouter.get('/',folderController.getUserFolders)
-folderRouter.put('/:folderId',folderController.updateFolder)
-folderRouter.delete('/empty',folderController.deleteEmptyFolder)
-folderRouter.delete('/recursive/:folderId',folderController.deletFolderRecursively)
-folderRouter.delete('/many',folderController.deletManyFolders)
-folderRouter.get('/avatar',folderController.getAvatarFolder)
-folderRouter.post('/avatar',folderController.createAvartarFolder)
-folderRouter.update('/avatar',folderController.updateAvatarFolder)
-folderRouter.delete('/avatar',folderController.deleteAvatarFolder)
+// All folder routes should be protected
+// router.use(protect);
 
-module.exports=folderRouter
+// Stats and Bulk Actions
+folderRouter.get('/stats', folderController.getFolderStats);
+folderRouter.delete('/bulk-delete', folderController.deleteManyFolders);
+
+// Avatar Folder Specialized Routes
+folderRouter.route('/avatar')
+  .get(folderController.handleAvatarFolder)
+  .post(folderController.handleAvatarFolder);
+
+// Standard CRUD
+folderRouter.route('/')
+  .get(folderController.getUserFolders)
+  .post(folderController.createFolder);
+
+folderRouter.route('/:folderId')
+  .put(folderController.updateFolder)
+  .delete(folderController.deleteFolderRecursively); // Using the recursive version by default
+
+module.exports = folderRouter;

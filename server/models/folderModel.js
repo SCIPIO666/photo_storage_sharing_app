@@ -1,227 +1,174 @@
-
 const prisma = require('../config/prismaConfig');
 const cloudinary = require('../config/cloudinary');
 const logger = require('../utils/logger');
 
-async function collectFolderIds(folderId){
+async function collectFolderIds(folderId) {
     try {
-        //collect all ids recursively
-        const children= await prisma.folder.findMany({
-            where: {parentId: folderId},
-            select: {id : true}
-        })
+        const children = await prisma.folder.findMany({
+            where: { parentId: folderId },
+            select: { id: true }
+        });
 
-        let allIds=[folderId]
-        for(let child of children){
-            const childIds=await collectFolderIds(child.id)
-            allIds=allIds.concat(childIds)
+        let allIds = [folderId];
+        for (let child of children) {
+            const childIds = await collectFolderIds(child.id);
+            allIds = allIds.concat(childIds);
         }
-
-        return allIds
+        return allIds;
     } catch (error) {
-        logger.error(`error: ${error.message}`)
-        throw error
+        logger.error(`error: ${error.message}`);
+        throw error;
     }
 }
-     async function createFolder(userId,name,parentId ){
-        try {
-            const newFolder=await  prisma.folder.create({
-                data: {
-                    name,
-                    userId,
-                    parentId: options.parentId || null
-                }
-                
-            })
-        return newFolder
-        } catch (error) {
-            logger.error(`error: ${error.message}`)
-        }
-    }
-   async function getUserFolders(userId, rootOnly=false) {
 
-    try{
-    const userFolders= await prisma.folder.findMany({
-        where: {
-            userId,
-            parentId: rootOnly? null : undefined,
-        },
-        include: {
-            children : true,
-            files: true
-        }
-    })
-    return userFolders
-    } catch (error) {
-      logger.error(`Error in getUserFiles: ${error.message}`);
-      throw error;
-    }
-  }
-  
-   async function getFolderById(folderId, userId) {
+async function createFolder(userId, name, parentId) {
     try {
-      const file = await prisma.folder.findFirst({
-        where: { id: folderId, userId },
-        include: { files: true }
-      });
-      
-      if (!file) throw new Error('File not found');
-      return file;
+        const newFolder = await prisma.folder.create({
+            data: {
+                name,
+                userId,
+                parentId: parentId || null // Fixed: was options.parentId
+            }
+        });
+        return newFolder;
     } catch (error) {
-      logger.error(`Error in getFileById: ${error.message}`);
-      throw error;
+        logger.error(`error: ${error.message}`);
+        throw error; //Always throwing in model ,error bubbles upwards
     }
-  }
-  
-   async function deleteEmptyFolder(folderId, userId) {
+}
+
+async function getUserFolders(userId, rootOnly = false) {
     try {
-        const folder=await prisma.folder.findUnique({
-            where:{folderId,userId},
+        const userFolders = await prisma.folder.findMany({
+            where: {
+                userId,
+                parentId: rootOnly ? null : undefined,
+            },
             include: {
                 children: true,
                 files: true
             }
-        })
-        if (folder.children.length>0 ||  folder.files.length>0){
-            throw new Error ("Folder is not empty")
-        }
-
-       const deletedFolder= await prisma.folder.delete({
-            where:{id: folderId}
-        })
-        return deletedFolder
+        });
+        return userFolders;
     } catch (error) {
-      logger.error(`Error in deleteFile: ${error.message}`);
-      throw error;
-    }
-  }
-  async function deleteFolderRecursively(folderIds){
-    //find child folders first
-    const childFolders=await prisma.findMany({
-        where: {parentId: folderId},
-        select: {id : true}
-    })
-    //recursive deletion
-    for (let child of childFolders){
-        await deleteFolderRecursively(child.id)
-    }
-
-    //find all files in currentFolder
-    const deleteFiles=await prisma.file.findMany({
-        where: {folderId},
-        select:{
-            id: true,
-            publicId: true
-        }
-    })
-    //delete associated media from cloudinary
-    await Promise.all(
-        deleteFiles.map(deleteFile=>cloudinary.uploader.destroy(deleteFile.publicId))
-    )
-
-    //deleting all files metadata  in current folder
-    await prisma.file.deleteMany({
-        where:{folderId: folderId}
-
-    })
-
-    //delete the folder itself
-    await prisma.folder.delete({
-        where:{id: folderId}
-    })
-  }
-    async function deleteManyFolders(folderIds,userId) {
-        try {
-            //collect all folder ids for all input folders
-            let allFolderIds=[]
-            for (const folderId of folderIds){
-                const ids=await collectFolderIds(folderId)
-                allFolderIds=allFolderIds.concat(ids)
-            }
-
-            //remove duplicates
-            allFolderIds=Array.from(new Set(allFolderIds))
-
-            //extract all files in the folders
-            const files= await prisma .file.findMany({
-                where : {folderId: {in: allFolderIds}},
-                select: {
-                    id: true,
-                    publicId: true
-                }
-            })
-            //delete from cloudinary ...use publicId 
-            await Promise.all(files.map(file=>cloudinary.uploader.destroy(file.publicId)))
-
-            //delete all accompanying metadata
-            const deletedResult=await prisma.folder.deleteMany({
-                where: {id: {in : allFolderIds}}
-            })
-
-            return deletedResult
-        } catch (error) {
-        logger.error(`Error in deleteManyFiles: ${error.message}`);
+        logger.error(`Error in getUserFolders: ${error.message}`);
         throw error;
+    }
+}
+
+async function getFolderById(folderId, userId) {
+    try {
+        const folder = await prisma.folder.findFirst({ // Fixed variable name to folder
+            where: { id: folderId, userId },
+            include: { files: true }
+        });
+        if (!folder) throw new Error('Folder not found');
+        return folder;
+    } catch (error) {
+        logger.error(`Error in getFolderById: ${error.message}`);
+        throw error;
+    }
+}
+
+async function deleteEmptyFolder(folderId, userId) {
+    try {
+        const folder = await prisma.folder.findUnique({
+            where: { id: folderId }, 
+            include: {
+                children: true,
+                files: true
+            }
+        });
+        
+        if (!folder || folder.userId !== userId) throw new Error("Unauthorized or not found");
+        if (folder.children.length > 0 || folder.files.length > 0) {
+            throw new Error("Folder is not empty");
         }
-    }
-  
-   async function updateFolder(folderId, updatedData={}) {
-    try {
-     const existingFolder= await getFileById(folderId, userId);
-      
-      const updatedFolder = await prisma.folder.update({
-        where: { id: fileId ,userId},
-        data: {
-          ...updateData,
-          updatedAt: new Date()
-        },
-        include: { files: true }
-      });
-      
-      return updatedFolder;
-    } catch (error) {
-      logger.error(`Error in updateFile: ${error.message}`);
-      throw error;
-    }
-  }
-  
-   async function getFolderStats(userId) {
-    try {
-      const stats = await prisma.folder.aggregate({
-        where: { userId },
-        _count: true,
-        _sum: { size: true },
-        _avg: { size: true }
-      });
-      
-      const byType = await prisma.folder.groupBy({
-        by: ['mimeType'],
-        where: { userId },
-        _count: true,
-        _sum: { size: true }
-      });
-      
-      return {
-        totalFolders: stats._count,
-        totalSize: stats._sum.size || 0,
-        averageSize: stats._avg.size || 0,
-        byType
-      };
-    } catch (error) {
-      logger.error(`Error in getStats: ${error.message}`);
-      throw error;
-    }
-  }
-    // createFolder,  userId,name,parentId 
-    // getUserFolders,  userId, rootOnly=false)
-    // getFolderById,   folderId, userId
-    // deleteEmptyFolder,  folderId, userId
-    // deleteFolderRecursively,  folderIds
-    // deleteManyFolders,  folderIds, userId
-    // updateFolder,  folderId, updatedData={}
-    // getFolderStats,  userId
 
+        return await prisma.folder.delete({ where: { id: folderId } });
+    } catch (error) {
+        logger.error(`Error in deleteEmptyFolder: ${error.message}`);
+        throw error;
+    }
+}
 
+async function deleteFolderRecursively(folderId) { 
+    
+    const childFolders = await prisma.folder.findMany({
+        where: { parentId: folderId },
+        select: { id: true }
+    });
+
+    for (let child of childFolders) {
+        await deleteFolderRecursively(child.id);
+    }
+
+    const deleteFiles = await prisma.file.findMany({
+        where: { folderId },
+        select: { id: true, publicId: true }
+    });
+
+    await Promise.all(
+        deleteFiles.map(file => cloudinary.uploader.destroy(file.publicId))
+    );
+
+    await prisma.file.deleteMany({ where: { folderId } });
+    return await prisma.folder.delete({ where: { id: folderId } });
+}
+
+async function deleteManyFolders(folderIds, userId) {
+    try {
+        let allFolderIds = [];
+        for (const folderId of folderIds) {
+            const ids = await collectFolderIds(folderId);
+            allFolderIds = allFolderIds.concat(ids);
+        }
+        allFolderIds = Array.from(new Set(allFolderIds));
+
+        const files = await prisma.file.findMany({
+            where: { folderId: { in: allFolderIds }, userId },
+            select: { publicId: true }
+        });
+
+        await Promise.all(files.map(file => cloudinary.uploader.destroy(file.publicId)));
+
+        return await prisma.folder.deleteMany({
+            where: { id: { in: allFolderIds }, userId }
+        });
+    } catch (error) {
+        logger.error(`Error in deleteManyFolders: ${error.message}`);
+        throw error;
+    }
+}
+
+async function updateFolder(folderId, userId, updateData = {}) { 
+    try {
+        return await prisma.folder.update({
+            where: { id: folderId, userId }, 
+            data: {
+                ...updateData,
+                updatedAt: new Date()
+            },
+            include: { files: true }
+        });
+    } catch (error) {
+        logger.error(`Error in updateFolder: ${error.message}`);
+        throw error;
+    }
+}
+
+async function getFolderStats(userId) {
+    try {
+        const stats = await prisma.folder.aggregate({
+            where: { userId },
+            _count: true
+        });
+        return { totalFolders: stats._count };
+    } catch (error) {
+        logger.error(`Error in getFolderStats: ${error.message}`);
+        throw error;
+    }
+}
 
 module.exports = {
     createFolder,
